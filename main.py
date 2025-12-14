@@ -175,17 +175,18 @@ class MiMotionRunner:
         return app_token
 
     # 主函数
-    def login_and_post_step(self, min_step, max_step):
+    def login_and_post_step(self, 18000, 22000):
         if self.invalid:
-            return "账号或密码配置有误", False
-        app_token = self.login()
-        if app_token is None:
-            return "登陆失败！", False
-
-        step = str(random.randint(min_step, max_step))
-        self.log_str += f"已设置为随机步数范围({min_step}~{max_step}) 随机值:{step}\n"
-        ok, msg = zeppHelper.post_fake_brand_data(step, app_token, self.user_id)
-        return f"修改步数（{step}）[" + msg + "]", ok
+                return "账号或密码配置有误", False
+            app_token = self.login()
+            if app_token is None:
+                return "登陆失败！", False
+        
+            # 逻辑保持不变，它会使用 min_step=18000 和 max_step=22000 来生成随机数
+            step = str(random.randint(min_step, max_step))
+            self.log_str += f"已设置为随机步数范围({min_step}~{max_step}) 随机值:{step}\n"
+            ok, msg = zeppHelper.post_fake_brand_data(step, app_token, self.user_id)
+            return f"修改步数（{step}）[" + msg + "]", ok
 
 
 def run_single_account(total, idx, user_mi, passwd_mi):
