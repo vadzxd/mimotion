@@ -6,23 +6,35 @@ on:
       - completed
   workflow_dispatch:
 
+concurrency:
+  group: random-cron-master
+  cancel-in-progress: false
+
 jobs:
   repo-sync:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.PAT }} #此处PAT需要申请，教程详见：README
+          ref: master
       - name: random cron
         run: |
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git fetch origin master:refs/remotes/origin/master
+          git checkout -B master origin/master
           source cron_convert.sh
           echo "configed CRON_HOURS ${{ vars.CRON_HOURS }}"
           persist_execute_log ${{ github.event_name }} ${{ vars.CRON_HOURS }}
-          git config user.name github-actions
-          git config user.email github-actions@users.noreply.github.com
-          git add .
+          git add .github/workflows/run.yml cron_change_time
+          if git diff --cached --quiet; then
+            echo "No cron changes to commit"
+            exit 0
+          fi
           current=`TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S'`
           git commit -m "[${current}] random cron trigger by ${{ github.event_name }}"
-          git push origin master
+          git pull --rebase origin master
+          git push origin HEAD:master
