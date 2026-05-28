@@ -2,8 +2,14 @@ name: 刷步数
 
 on:
   schedule:
-    - cron: '21 1,4,7,10,12,14 * * *'
+    - cron: '21 1,4,7,10,12,14 * * *' # randomized
+    - cron: '55 14 * * *' # fixed final, Beijing 22:55
   workflow_dispatch:
+    inputs:
+      fixed_step:
+        description: "Optional fixed step count for this run"
+        required: false
+        default: ""
 
 jobs:
   build:
@@ -28,8 +34,14 @@ jobs:
         env:
             CONFIG: ${{ secrets.CONFIG }}
             AES_KEY: ${{ secrets.AES_KEY }}
+            FIXED_STEP: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fixed_step || '' }}
+            FINAL_STEP: ${{ vars.FINAL_STEP || '22000' }}
+            RUN_SCHEDULE: ${{ github.event.schedule }}
         run: |
           pip3 install requests pytz pycryptodome
+          if [ "$RUN_SCHEDULE" = "55 14 * * *" ]; then
+            export FIXED_STEP="$FINAL_STEP"
+          fi
           python3 main.py
 
       - name: persist tokens
